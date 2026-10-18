@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nubo</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #0b0c10;
+    color: #e8e8e8;
+    font-family: -apple-system, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #orb {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #5ad1ff, #1b4b91);
+    box-shadow: 0 0 40px rgba(90,209,255,0.5);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #orb.listening {
+    transform: scale(1.15);
+    box-shadow: 0 0 70px rgba(90,209,255,0.9);
+  }
+  #status {
+    margin-top: 24px;
+    font-size: 18px;
+    opacity: 0.8;
+    min-height: 24px;
+  }
+  #transcript {
+    margin-top: 12px;
+    font-size: 14px;
+    opacity: 0.5;
+    max-width: 80%;
+  }
+</style>
+</head>
+<body>
+
+<div id="orb"></div>
+<div id="status">Say "Wake up Nubo"</div>
+<div id="transcript"></div>
+
+<script>
+const orb = document.getElementById('orb');
+const statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.continuous = true;
+recognition.interimResults = false;
+recognition.lang = 'en-US';
+
+let awake = false;
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+// Placeholder "brain" — replace this with a real AI call later
+function respondTo(command) {
+  if (command.includes('ps5') || command.includes('playstation')) {
+    speak("Done, sir.");
+    // TODO: trigger ps5-wake call here once PSN account is recovered
+    return;
+  }
+  speak("I heard you say: " + command + ". My real brain isn't connected yet.");
+}
+
+recognition.onresult = (event) => {
+  const last = event.results[event.results.length - 1];
+  const text = last[0].transcript.trim().toLowerCase();
+  transcriptEl.textContent = text;
+
+  if (!awake) {
+    if (text.includes('wake up nubo') || text.includes('wake up, nubo')) {
+      awake = true;
+      orb.classList.add('listening');
+      statusEl.textContent = "I'm listening...";
+      speak("Yes?");
+    }
+  } else {
+    statusEl.textContent = "Say \"Wake up Nubo\" to start again";
+    orb.classList.remove('listening');
+    respondTo(text);
+    awake = false;
+  }
+};
+
+recognition.onerror = (event) => {
+  console.log('Speech recognition error:', event.error);
+};
+
+recognition.onend = () => {
+  // Keep it always listening
+  recognition.start();
+};
+
+recognition.start();
+</script>
+
+</body>
+</html>
